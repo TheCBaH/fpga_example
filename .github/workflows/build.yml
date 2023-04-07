@@ -1,0 +1,65 @@
+name: build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - arty_35
+        example:
+          - counter_test
+          - linux_litex_demo
+          - litex_demo-picorv32
+          - litex_demo-vexriscv
+          - picosoc_demo
+          - pulse_width_led
+        host:
+          - devcontainer
+        include:
+          - target: basys3
+            example: timer
+            host: devcontainer
+          - target: basys3
+            example: counter_test
+            host: devcontainer
+          - target: basys3
+            example: picosoc_demo
+            host: devcontainer
+    steps:
+    - name: checkout
+      uses: actions/checkout@v3
+      with:
+        submodules: true
+    - name: devcontainer
+      uses: ./.github/workflows/actions/devcontainer
+      if: matrix.host == 'devcontainer'
+      id: devcontainer
+    - name: setup
+      run: |
+        host="${{ matrix.host }}"
+        case "$host" in
+        devcontainer)
+          echo 'EXEC=${{ steps.devcontainer.outputs.exec }}' >> $GITHUB_ENV
+          ;;
+        esac
+    - name: build
+      run: |
+        ${{ env.EXEC }} make ${{ matrix.example }}.example TARGET=${{ matrix.target }}
+    - name: bit file
+      run: |
+        set -x
+        file=$(${{ env.EXEC }} make --quiet --no-print-directory ${{ matrix.example }}.example_bit TARGET=${{ matrix.target }})
+        cp $file ${{ matrix.example }}-${{ matrix.target }}.bit
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ matrix.example }}-${{ matrix.target }}
+        if-no-files-found: error
+        path: ${{ matrix.example }}-${{ matrix.target }}.bit

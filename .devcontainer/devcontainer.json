@@ -1,0 +1,24 @@
+// For format details, see https://aka.ms/devcontainer.json.
+{
+    "name": "F4FPGA examples",
+    "runArgs": ["--init", "--privileged"], // to enable swapon command
+    "build":  {
+        "dockerfile": "Dockerfile",
+        "cacheFrom": "ghcr.io/thecbah/fpga_example/devcontainer:master"
+    },
+    "features": {
+        "ghcr.io/devcontainers/features/common-utils:2": {
+            "installZsh": "true",
+            "username": "vscode",
+            "userUid": "1000",
+            "userGid": "1000",
+            "upgradePackages": "false"
+        },
+        "./features/f4fpga": { }
+    },
+    "postCreateCommand": {
+        "submodules": "git submodule update --recursive --init"
+    },
+    "remoteUser": "vscode",
+    "waitFor": "postCreateCommand"
+}

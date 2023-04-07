@@ -1,0 +1,9 @@
+// For format details, see https://aka.ms/devcontainer.json.
+{
+    "name": "F4FPGA examples (prebuild)",
+    "image": "ghcr.io/thecbah/fpga_example/devcontainer:master",
+    "postCreateCommand": {
+        "submodules": "git submodule update --recursive --init"
+    },
+    "waitFor": "postCreateCommand"
+}

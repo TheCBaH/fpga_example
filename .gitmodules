@@ -1,0 +1,3 @@
+[submodule "f4pga-examples"]
+	path = f4pga-examples
+	url = https://github.com/chipsalliance/f4pga-examples.git
