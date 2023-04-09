@@ -10,3 +10,7 @@ Devcontainer to create development environment for F4FPGA, and tested with [F4FP
   * `.devcontainer/with_swap.sh` to add swap (needed by fasm)
   * `make counter_test.example` build counter_test examp;e
   * `make litex_demo-picorv32.example` build picorv32 variant of the litex_demo example
+
+## Prebuilt images
+Prebuilt images for [F4FPGA examples](https://symbiflow-examples.readthedocs.io/en/latest/building-examples.html) available
+in the [release](https://github.com/TheCBaH/fpga_example/releases) section.
