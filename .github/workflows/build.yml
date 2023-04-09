@@ -36,10 +36,13 @@ jobs:
           - devcontainer
         include:
           - target: basys3
-            example: timer
+            example: button_controller
             host: devcontainer
           - target: basys3
             example: counter_test
+            host: devcontainer
+          - target: basys3
+            example: timer
             host: devcontainer
           - target: basys3
             example: picosoc_demo

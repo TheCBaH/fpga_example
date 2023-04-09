@@ -17,6 +17,9 @@ EXAMPLES_TOP=f4pga-examples/${FPGA_FAM}
 	set -eux;file="${EXAMPLES_TOP}/$(basename $@)/build/${TARGET}/top.bit";\
 	 test -f $$file;du -h $$file >&2;echo $$file
 
+button_controller.example: EXAMPLES_TOP=f4pga-examples/${FPGA_FAM}/additional_examples
+button_controller.example_bit: EXAMPLES_TOP=f4pga-examples/${FPGA_FAM}/additional_examples
+
 litex_demo-%.example:
 	set -eux;\
 	 dir="$(word 1,$(subst -,${space},$(basename $@)))";\
