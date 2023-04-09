@@ -6,7 +6,9 @@ RUN set -eux;\
   ca-certificates\
   curl\
   git\
+  iverilog\
   make\
+  verilator\
   wget\
   xz-utils\
 ;\

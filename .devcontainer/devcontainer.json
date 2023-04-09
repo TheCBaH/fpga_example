@@ -16,6 +16,13 @@
         },
         "./features/f4fpga": { }
     },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "mshr-h.veriloghdl"
+            ]
+        }
+    },
     "postCreateCommand": {
         "submodules": "git submodule update --recursive --init"
     },

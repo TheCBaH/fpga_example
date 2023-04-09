@@ -2,6 +2,13 @@
 {
     "name": "F4FPGA examples (prebuild)",
     "image": "ghcr.io/thecbah/fpga_example/devcontainer:master",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "mshr-h.veriloghdl"
+            ]
+        }
+    },
     "postCreateCommand": {
         "submodules": "git submodule update --recursive --init"
     },
