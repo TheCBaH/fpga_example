@@ -17,6 +17,15 @@ EXAMPLES_TOP=f4pga-examples/${FPGA_FAM}
 	set -eux;file="${EXAMPLES_TOP}/$(basename $@)/build/${TARGET}/top.bit";\
 	 test -f $$file;du -h $$file >&2;echo $$file
 
+OFL_BOARD.basys3=basys3
+OFL_BOARD.arty_35=arty_a7_35t
+
+%.example_program:
+	set -eux;file=$$(${MAKE} --quiet --no-print-directory $(basename $@).example_bit);\
+	 . ${F4PGA_INSTALL_DIR}/${FPGA_FAM}/conda/etc/profile.d/conda.sh;\
+	 conda activate ${FPGA_FAM};\
+	 sudo $$(command -v openFPGALoader) -b $(OFL_BOARD.${TARGET}) $$file
+
 button_controller.example: EXAMPLES_TOP=f4pga-examples/${FPGA_FAM}/additional_examples
 button_controller.example_bit: EXAMPLES_TOP=f4pga-examples/${FPGA_FAM}/additional_examples
 
@@ -70,3 +79,7 @@ devcontainer.test:
 	echo devcontainer exec --id-label ${DEVCONTAINER_ID} --workspace-folder . make linux_litex_demo.example
 	echo devcontainer exec --id-label ${DEVCONTAINER_ID} --workspace-folder . make timer.example TARGET=basys3
 	devcontainer exec --id-label ${DEVCONTAINER_ID} --workspace-folder . make litex_demo-picorv32.example
+
+conda:
+	set -eu;. ${F4PGA_INSTALL_DIR}/${FPGA_FAM}/conda/etc/profile.d/conda.sh;\
+	 conda activate ${FPGA_FAM}; exec bash -i

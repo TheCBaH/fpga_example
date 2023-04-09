@@ -9,6 +9,10 @@
             ]
         }
     },
+    "runArgs": [ "--init", "--privileged" ], // For openFPGALoader
+    "mounts": [
+        "source=/dev/,target=/dev/,type=bind,consistency=cached"
+    ],
     "postCreateCommand": {
         "submodules": "git submodule update --recursive --init"
     },

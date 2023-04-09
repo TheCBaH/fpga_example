@@ -2,6 +2,9 @@
 {
     "name": "F4FPGA examples",
     "runArgs": ["--init", "--privileged"], // to enable swapon command
+    "mounts": [
+        "source=/dev/,target=/dev/,type=bind,consistency=cached"
+    ],
     "build":  {
         "dockerfile": "Dockerfile",
         "cacheFrom": "ghcr.io/thecbah/fpga_example/devcontainer:master"

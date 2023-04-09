@@ -8,6 +8,7 @@ RUN set -eux;\
   git\
   iverilog\
   make\
+  picocom\
   verilator\
   wget\
   xz-utils\
