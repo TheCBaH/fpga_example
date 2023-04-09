@@ -26,7 +26,8 @@ litex_demo-%.example:
 	 . ${F4PGA_INSTALL_DIR}/${FPGA_FAM}/conda/etc/profile.d/conda.sh;\
 	 conda activate ${FPGA_FAM};\
 	 pip install -r requirements.txt;\
-	 ./src/litex/litex/boards/targets/arty.py --toolchain=symbiflow --cpu-type=$$cpu --sys-clk-freq 80e6 --output-dir build/$$cpu/arty_35 --variant a7-35 --build
+	 ./src/litex/litex/boards/targets/arty.py --toolchain=symbiflow --cpu-type=$$cpu\
+	  --sys-clk-freq 80e6 --output-dir build/$$cpu/${TARGET} --variant a7-35 --build
 
 litex_demo-%.example_bit:
 	set -eux;\
@@ -34,6 +35,21 @@ litex_demo-%.example_bit:
 	 cpu="$(word 2,$(subst -,${space},$(basename $@)))";\
 	 file="${EXAMPLES_TOP}/$$dir/build/$$cpu/${TARGET}/gateware/arty.bit";\
 	 test -f $$file;echo $$file
+
+hello-arty-%.example:
+	set -eux;\
+	 demo="$(word 3,$(subst -,${space},$(basename $@)))";\
+	 cd f4pga-examples/projf-makefiles/hello/hello-arty/$$demo;\
+	 git clean -xdf .;\
+	 . ${F4PGA_INSTALL_DIR}/${FPGA_FAM}/conda/etc/profile.d/conda.sh;\
+	 conda activate ${FPGA_FAM};\
+	 ${MAKE}
+
+hello-arty-%.example_bit:
+	set -eux;\
+	 demo="$(word 3,$(subst -,${space},$(basename $@)))";\
+	 file="f4pga-examples/projf-makefiles/hello/hello-arty/$$demo/build/${TARGET}/top.bit";\
+	 test -f $$file;du -h $$file >&2;echo $$file
 
 DEVCONTAINER_ID=devcontainer=1
 devcontainer.build:

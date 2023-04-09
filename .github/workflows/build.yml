@@ -15,6 +15,18 @@ jobs:
           - arty_35
         example:
           - counter_test
+          - hello-arty-A
+          - hello-arty-B
+          - hello-arty-C
+          - hello-arty-D
+          - hello-arty-E
+          - hello-arty-F
+          - hello-arty-G
+          - hello-arty-H
+          - hello-arty-I
+          - hello-arty-J
+          - hello-arty-K
+          - hello-arty-L
           - linux_litex_demo
           - litex_demo-picorv32
           - litex_demo-vexriscv
