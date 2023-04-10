@@ -72,12 +72,17 @@ EOF
 )"
 updaterc "$rc"
 
-check_packages opam ocaml m4 pkg-config libffi-dev
+check_packages\
+ libffi-dev\
+ m4\
+ ocaml\
+ opam\
+ pkg-config\
 
 opam init --no-setup --disable-sandboxing
 eval $(opam env)
 opam install -y depext
-PACKAGES=\
+PACKAGES="\
  dune\
  hardcaml\
  hardcaml_c\
@@ -87,6 +92,7 @@ PACKAGES=\
  hardcaml_xilinx\
  merlin\
  utop\
+"
 
 opam depext ${PACKAGES}
 opam install ${PACKAGES}

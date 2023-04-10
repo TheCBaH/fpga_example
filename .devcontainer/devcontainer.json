@@ -17,7 +17,8 @@
             "userGid": "1000",
             "upgradePackages": "false"
         },
-        "./features/f4fpga": { }
+        "./features/f4fpga": { },
+        "./features/hardcaml": { }
     },
     "customizations": {
         "vscode": {
