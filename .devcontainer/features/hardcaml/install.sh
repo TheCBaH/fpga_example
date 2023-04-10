@@ -4,6 +4,31 @@ set -x
 
 echo "Activating feature 'HARDCAML'"
 
+PACKAGES=${PACKAGES:-$@}
+echo "Selected packages: $PACKAGES"
+
+# From https://github.com/devcontainers/features/blob/main/src/git/install.sh
+apt_get_update()
+{
+    if [ "$(find /var/lib/apt/lists/* | wc -l)" = "0" ]; then
+        echo "Running apt-get update..."
+        apt-get update -y
+    fi
+}
+
+# Checks if packages are installed and installs them if not
+check_packages() {
+    if ! dpkg -s "$@" > /dev/null 2>&1; then
+        apt_get_update
+        if ! apt-get -o Acquire::Retries=3 -y install --no-install-recommends "$@"; then
+            apt-get update -y
+            apt-get -o Acquire::Retries=3 -y install --no-install-recommends "$@"
+        fi
+    fi
+}
+
+export DEBIAN_FRONTEND=noninteractive
+
 USERNAME="${USERNAME:-"${_REMOTE_USER:-"automatic"}"}"
 UPDATE_RC="${UPDATE_RC:-"true"}"
 
@@ -47,8 +72,7 @@ EOF
 )"
 updaterc "$rc"
 
-sudo apt-get update
-sudo apt-get install --no-install-recommends opam ocaml m4 pkg-config libffi-dev
+check_packages opam ocaml m4 pkg-config libffi-dev
 
 opam init --no-setup --disable-sandboxing
 eval $(opam env)
@@ -68,3 +92,6 @@ opam depext ${PACKAGES}
 opam install ${PACKAGES}
 opam clean --repo-cache
 chown -R ${USERNAME} $OPAMROOT
+
+apt-get clean
+rm -rf /var/lib/apt/lists/*
