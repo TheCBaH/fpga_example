@@ -7,7 +7,7 @@
     ],
     "build":  {
         "dockerfile": "Dockerfile",
-        "cacheFrom": "ghcr.io/thecbah/fpga_example/devcontainer:master"
+        "cacheFrom": "ghcr.io/thecbah/fpga_example/devcontainer:devel"
     },
     "features": {
         "ghcr.io/devcontainers/features/common-utils:2": {
