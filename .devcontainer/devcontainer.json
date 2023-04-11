@@ -23,7 +23,8 @@
     "customizations": {
         "vscode": {
             "extensions": [
-                "mshr-h.veriloghdl"
+                "mshr-h.veriloghdl",
+                "ocamllabs.ocaml-platform"
             ]
         }
     },

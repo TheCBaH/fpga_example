@@ -90,7 +90,8 @@ PACKAGES="\
  hardcaml_verilator\
  hardcaml_waveterm\
  hardcaml_xilinx\
- merlin\
+ ocaml-lsp-server\
+ ocamlformat-rpc\
  utop\
 "
 
