@@ -10,5 +10,9 @@
         "picosoc",
         "thecbah",
         "vexriscv"
-    ]
+    ],
+    "ocaml.sandbox": {
+        "kind": "opam",
+        "switch": "default"
+    }
 }

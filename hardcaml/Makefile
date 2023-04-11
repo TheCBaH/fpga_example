@@ -1,12 +1,12 @@
 
 default:
-	dune build
+	opam exec dune build
 
 main:
-	dune exec ./main.exe
+	opam exec dune exec ./main.exe
 
 clean:
-	dune clean
+	opam exec dune clean
 	rm -f main.v
 
 .PHONY: default main clean
