@@ -5,6 +5,9 @@ default:
 main:
 	opam exec dune exec ./main.exe
 
+format:
+	opam exec ocamlformat *.ml
+
 clean:
 	opam exec dune $@
 	rm -f main.v

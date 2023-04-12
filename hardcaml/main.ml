@@ -53,11 +53,13 @@ let count_with_carry ?(base=10) ?(bits=4) ~reset ~increment clock =
   let open Signal in
   let count_next = wire bits
   and limit = base - 1 in
-  let count = reg ~enable:increment spec count_next in
+  let count = reg spec count_next in
   let cary = increment &: (count ==:. limit) in
   count_next <== mux2 (cary |: reset)
             (zero (Signal.width count_next))
-            (count +:. 1);
+            (mux2 increment
+              (count +:. 1)
+              count);
   (count,cary)
 let count_with_carry_test_1 =
   let _clock = "clock" in
