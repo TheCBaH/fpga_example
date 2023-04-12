@@ -151,7 +151,7 @@ let clock_gen_test =
   cycles 15;
   Hardcaml_waveterm.Waveform.print ~display_height:11 ~display_width:80 ~wave_width:0 waves
 
-let segment_decode ~digit =
+let segment_encode ~digit =
   let display =
     [
       ('0', "1000000");
@@ -172,9 +172,28 @@ let segment_decode ~digit =
       ('F', "0001110");
     ]
   in
-  let open Bits in
-  let segment = mux digit (List.map (fun (_, s) -> of_string ("7'b" ^ s)) display) in
-  segment
+  let open Signal in
+  let segments = mux digit (List.map (fun (_, s) -> of_string ("7'b" ^ s)) display) in
+  segments
+
+let segment_ecode_test =
+  let _digit = "digit" in
+  let digit = Signal.input _digit 4 in
+  let segments = segment_encode ~digit in
+  let _segments = "segments" in
+  let circuit = Circuit.create_exn ~name:"segment_decode" [ Signal.output _segments segments ] in
+  let waves, sim = Hardcaml_waveterm.Waveform.create (Cyclesim.create circuit) in
+  let set wire n =
+    Cyclesim.in_port sim wire := Bits.of_int ~width:4 n;
+    Cyclesim.cycle sim
+  in
+  set _digit 0;
+  set _digit 1;
+  set _digit 8;
+  set _digit 0xb;
+  set _digit 0xF;
+  let display_rules = Hardcaml_waveterm.Display_rule.[ port_name_is _segments ~wave_format:Bit; default ] in
+  Hardcaml_waveterm.Waveform.print ~display_rules ~display_height:11 ~display_width:80 ~wave_width:4 waves
 
 let scope = Scope.create ()
 let output_mode = Rtl.Output_mode.To_file "main.v"
