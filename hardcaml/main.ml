@@ -55,14 +55,14 @@ let modify_count ?(base=10) ?(bits=4) ~clock ~reset ~increment =
   and limit = base - 1 in
   let count = reg ~enable:increment spec count_next in
   let cary = increment &: (count ==:. limit) in
-  count_next <== mux2 cary
+  count_next <== mux2 (cary |: reset)
             (zero (Signal.width count_next))
             (count +:. 1);
   (count,cary)
 let modify_count_test_1 =
   let _clock = "clock" in
   let _increment = "increment" in
-  let _reset = "reset" in
+  let _reset = "[reset]" in
   let clock = Signal.input _clock 1 in
   let increment = Signal.input _increment 1 in
   let reset = Signal.input _reset 1 in
