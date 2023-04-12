@@ -6,7 +6,7 @@ main:
 	opam exec dune exec ./main.exe
 
 format:
-	opam exec ocamlformat -- -i *.ml
+	opam exec dune fmt
 
 clean:
 	opam exec dune $@
