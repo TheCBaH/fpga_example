@@ -46,7 +46,7 @@ let counter ~clock ~trigger ~minimum ~maximum =
   )
 ;;
 
-let modify_count ?(base=10) ?(bits=4) ~clock ~reset ~increment =
+let count_with_carry ?(base=10) ?(bits=4) ~reset ~increment clock =
   let base_bits = Base.Int.ceil_log2 base in
   assert(bits >= base_bits);
   let spec = Reg_spec.create ~clock () in
@@ -59,15 +59,15 @@ let modify_count ?(base=10) ?(bits=4) ~clock ~reset ~increment =
             (zero (Signal.width count_next))
             (count +:. 1);
   (count,cary)
-let modify_count_test_1 =
+let count_with_carry_test_1 =
   let _clock = "clock" in
   let _increment = "increment" in
   let _reset = "[reset]" in
   let clock = Signal.input _clock 1 in
   let increment = Signal.input _increment 1 in
   let reset = Signal.input _reset 1 in
-  let (count,carry) = modify_count ~clock ~increment ~reset ~base:5 ~bits:3 in
-  let circuit = Circuit.create_exn ~name:"modify_count" [
+  let (count,carry) = count_with_carry ~increment ~reset ~base:5 ~bits:3 clock in
+  let circuit = Circuit.create_exn ~name:"count_with_carry" [
      Signal.output "carry" carry;
      Signal.output "count" count;
   ] in
@@ -76,8 +76,7 @@ let modify_count_test_1 =
     for _ = 0 to n do
       Cyclesim.cycle sim;
     done in
-  Cyclesim.cycle sim;
-  Cyclesim.cycle sim;
+  cycles 2;
   (Cyclesim.in_port sim _increment) := Bits.vdd;
   cycles 5;
   (Cyclesim.in_port sim _increment) := Bits.gnd;
@@ -93,6 +92,47 @@ let modify_count_test_1 =
   (Cyclesim.in_port sim _reset) := Bits.gnd;
   cycles 4;
   Hardcaml_waveterm.Waveform.print ~display_height:15 ~display_width:100 ~wave_width:(0) waves
+
+let count_with_carry_test_2 =
+  let _clock = "clock" in
+  let _increment = "increment" in
+  let _reset = "[reset]" in
+  let clock = Signal.input _clock 1 in
+  let increment = Signal.input _increment 1 in
+  let reset = Signal.input _reset 1 in
+  let (count0,carry0) = count_with_carry ~increment ~reset clock in
+  let (count1,carry1) = count_with_carry ~increment:carry0 ~reset clock in
+  let circuit = Circuit.create_exn ~name:"count_with_carry" [
+     Signal.output "carry0" carry0;
+     Signal.output "count0" count0;
+     Signal.output "carry1" carry1;
+     Signal.output "count1" count1;
+  ] in
+  let waves, sim = Hardcaml_waveterm.Waveform.create (Cyclesim.create circuit) in
+  let set wire =
+    (Cyclesim.in_port sim wire) := Bits.vdd in
+  let clear wire =
+    (Cyclesim.in_port sim wire) := Bits.gnd in
+  let cycles n =
+    for _ = 0 to n do
+      Cyclesim.cycle sim;
+    done in
+  cycles 2;
+  set _increment;
+  cycles 5;
+  clear _increment;
+  cycles 3;
+  set _increment;
+  cycles 12;
+  clear _increment;
+  cycles 1;
+  set _increment;
+  cycles 2;
+  set _reset;
+  cycles 4;
+  clear _reset;
+  cycles 4;
+  Hardcaml_waveterm.Waveform.print ~display_height:20 ~display_width:100 ~wave_width:(0) waves
 
 let scope = Scope.create ()
 
