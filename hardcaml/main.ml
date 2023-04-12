@@ -146,16 +146,14 @@ let clock_gen ~target ~reset ~clock () =
   let divider = clock.clock / target in
   let limit = divider - 1 in
   let bits = Base.Int.ceil_log2 divider in
-  print_endline (string_of_int limit);
-  print_endline (string_of_int bits);
   let open Signal in
   let spec = Reg_spec.create ~clock:clock.wire ~clear:reset () in
-  let count_next = wire bits in
-  let count = reg spec count_next in
+  let count = wire bits in
   let pulse = count ==:. limit in
-  count_next <== mux2 pulse
+  let next = mux2 pulse
       (zero bits)
-      (count +:. 1);
+      (count +:. 1) in
+  count <== reg spec next;
   (pulse,count)
 ;;
 let clock_gen_test =
@@ -187,10 +185,9 @@ let clock_gen_test =
   set _reset;
   cycles 2;
   clear _reset;
-  cycles 10;
-  Hardcaml_waveterm.Waveform.print ~display_height:14 ~display_width:80
+  cycles 15;
+  Hardcaml_waveterm.Waveform.print ~display_height:11 ~display_width:80
     ~wave_width:0 waves
-
 
 let scope = Scope.create ()
 
