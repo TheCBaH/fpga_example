@@ -46,6 +46,54 @@ let counter ~clock ~trigger ~minimum ~maximum =
   )
 ;;
 
+let modify_count ?(base=10) ?(bits=4) ~clock ~reset ~increment =
+  let base_bits = Base.Int.ceil_log2 base in
+  assert(bits >= base_bits);
+  let spec = Reg_spec.create ~clock () in
+  let open Signal in
+  let count_next = wire bits
+  and limit = base - 1 in
+  let count = reg ~enable:increment spec count_next in
+  let cary = increment &: (count ==:. limit) in
+  count_next <== mux2 cary
+            (zero (Signal.width count_next))
+            (count +:. 1);
+  (count,cary)
+let modify_count_test_1 =
+  let _clock = "clock" in
+  let _increment = "increment" in
+  let _reset = "reset" in
+  let clock = Signal.input _clock 1 in
+  let increment = Signal.input _increment 1 in
+  let reset = Signal.input _reset 1 in
+  let (count,carry) = modify_count ~clock ~increment ~reset ~base:5 ~bits:3 in
+  let circuit = Circuit.create_exn ~name:"modify_count" [
+     Signal.output "carry" carry;
+     Signal.output "count" count;
+  ] in
+  let waves, sim = Hardcaml_waveterm.Waveform.create (Cyclesim.create circuit) in
+  let cycles n =
+    for _ = 0 to n do
+      Cyclesim.cycle sim;
+    done in
+  Cyclesim.cycle sim;
+  Cyclesim.cycle sim;
+  (Cyclesim.in_port sim _increment) := Bits.vdd;
+  cycles 5;
+  (Cyclesim.in_port sim _increment) := Bits.gnd;
+  cycles 3;
+  (Cyclesim.in_port sim _increment) := Bits.vdd;
+  cycles 7;
+  (Cyclesim.in_port sim _increment) := Bits.gnd;
+  cycles 1;
+  (Cyclesim.in_port sim _increment) := Bits.vdd;
+  cycles 2;
+  (Cyclesim.in_port sim _reset) := Bits.vdd;
+  cycles 4;
+  (Cyclesim.in_port sim _reset) := Bits.gnd;
+  cycles 4;
+  Hardcaml_waveterm.Waveform.print ~display_height:15 ~display_width:100 ~wave_width:(0) waves
+
 let scope = Scope.create ()
 
 let output_mode = Rtl.Output_mode.To_file("main.v")
