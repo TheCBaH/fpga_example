@@ -219,7 +219,7 @@ let display ~clock ~digits ~next ~reset =
   let display = segment @: ~:dot in
   let digit_next = mux2 next (mux2 (digit ==:. digits_count - 1) (width digit |> zero) (digit +:. 1)) digit in
   digit <== reg spec digit_next;
-  (digit, anode, display)
+  (anode, display)
 
 let display_test =
   let _digit_0 = "digit_0" in
@@ -237,11 +237,8 @@ let display_test =
   let dot = Signal.input _dot 1 in
   let digits = [ { data = digit_0; enable; dot }; { data = digit_1; enable; dot } ] in
   let reset = Signal.input _reset 1 in
-  let digit, anode, segments = display ~clock ~digits ~reset ~next:enable in
-  let circuit =
-    Circuit.create_exn ~name:"display"
-      [ Signal.output "digit" digit; Signal.output _anode anode; Signal.output _segments segments ]
-  in
+  let anode, segments = display ~clock ~digits ~reset ~next:enable in
+  let circuit = Circuit.create_exn ~name:"display" [ Signal.output _anode anode; Signal.output _segments segments ] in
   let waves, sim = Hardcaml_waveterm.Waveform.create (Cyclesim.create circuit) in
   let set wire = Cyclesim.in_port sim wire := Bits.vdd in
   (* let clear wire = Cyclesim.in_port sim wire := Bits.gnd in *)
@@ -260,15 +257,28 @@ let display_test =
   let display_rules =
     Hardcaml_waveterm.Display_rule.[ port_name_is_one_of [ _segments; _anode ] ~wave_format:Bit; default ]
   in
-  Hardcaml_waveterm.Waveform.print ~display_rules ~display_height:25 ~display_width:80 ~wave_width:4 waves
+  Hardcaml_waveterm.Waveform.print ~display_rules ~display_height:20 ~display_width:80 ~wave_width:4 waves
 
 let scope = Scope.create ()
 let output_mode = Rtl.Output_mode.To_file "main.v"
 
 let circuit =
-  let clock = Signal.input "clk" 1 in
-  let trigger = Signal.input "trigger" 1 in
-  let cnt = counter ~clock ~trigger ~minimum:0 ~maximum:10 in
-  Circuit.create_exn ~name:"test" [ Signal.output "b" (Signal.input "a" 1); Signal.output "counter" cnt ]
+  let _digit_0 = "digit_0" in
+  let _digit_1 = "digit_1" in
+  let _dot = "dot" in
+  let _enable = "enable" in
+  let _clock = "clock" in
+  let _reset = "reset" in
+  let _segments = "segments" in
+  let _anode = "anode" in
+  let digit_0 = Signal.input _digit_0 4 in
+  let digit_1 = Signal.input _digit_1 4 in
+  let clock = Signal.input _clock 1 in
+  let enable = Signal.input _enable 1 in
+  let dot = Signal.input _dot 1 in
+  let digits = [ { data = digit_0; enable; dot }; { data = digit_1; enable; dot } ] in
+  let reset = Signal.input _reset 1 in
+  let anode, segments = display ~clock ~digits ~reset ~next:enable in
+  Circuit.create_exn ~name:"test" [ Signal.output "anode" anode; Signal.output "segments" segments]
 
 let () = Rtl.output ~output_mode ~database:(Scope.circuit_database scope) Verilog circuit
