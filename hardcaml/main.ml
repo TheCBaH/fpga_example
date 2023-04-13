@@ -125,7 +125,7 @@ let clock_gen ~target ~reset ~clock =
   let pulse = count ==:. limit in
   let next = mux2 pulse (zero bits) (count +:. 1) in
   count <== reg spec next;
-  (pulse, count)
+  pulse
 
 let clock_gen_test =
   let _clock = "clock" in
@@ -134,7 +134,7 @@ let clock_gen_test =
   let reset = Signal.input _reset 1 in
   let pulse = clock_gen ~clock ~reset ~target:2 in
   let circuit =
-    Circuit.create_exn ~name:"clock_gen" [ Signal.output "pulse" (fst pulse); Signal.output "count" (snd pulse) ]
+    Circuit.create_exn ~name:"clock_gen" [ Signal.output "pulse" pulse]
   in
   let waves, sim = Hardcaml_waveterm.Waveform.create (Cyclesim.create circuit) in
   let set wire = Cyclesim.in_port sim wire := Bits.vdd in
@@ -149,7 +149,7 @@ let clock_gen_test =
   cycles 2;
   clear _reset;
   cycles 15;
-  Hardcaml_waveterm.Waveform.print ~display_height:11 ~display_width:80 ~wave_width:0 waves
+  Hardcaml_waveterm.Waveform.print ~display_height:8 ~display_width:80 ~wave_width:0 waves
 
 let segment_encode ~digit =
   let display =
@@ -193,7 +193,7 @@ let segment_encode_test =
   set _digit 0xb;
   set _digit 0xF;
   let display_rules = Hardcaml_waveterm.Display_rule.[ port_name_is _segments ~wave_format:Bit; default ] in
-  Hardcaml_waveterm.Waveform.print ~display_rules ~display_height:11 ~display_width:80 ~wave_width:4 waves
+  Hardcaml_waveterm.Waveform.print ~display_rules ~display_height:8 ~display_width:80 ~wave_width:4 waves
 
 type digit = { data : Signal.t; enable : Signal.t; dot : Signal.t }
 
@@ -203,8 +203,6 @@ let display ~clock ~digits ~next ~reset =
   let spec = Reg_spec.create ~clock ~clear:reset () in
   let open Signal in
   let digit = Base.Int.ceil_log2 digits_count |> wire in
-  print_endline (string_of_int digits_count);
-  print_endline (string_of_int (width digit));
   let anode =
     List.mapi
       (fun n d ->
@@ -258,6 +256,36 @@ let display_test =
     Hardcaml_waveterm.Display_rule.[ port_name_is_one_of [ _segments; _anode ] ~wave_format:Bit; default ]
   in
   Hardcaml_waveterm.Waveform.print ~display_rules ~display_height:20 ~display_width:80 ~wave_width:4 waves
+
+let clock_top ~clock ~reset =
+  let open Signal in
+  let digits = List.init 4 (fun _ -> {data=wire 4;enable=vdd;dot=gnd}) in
+  let refresh = clock_gen ~clock ~reset ~target:1000 in
+  let anode, segments = display ~clock:clock.wire ~digits ~reset ~next:refresh in
+  List.iteri (fun n d -> d.data <== of_int ~width:4 n) digits;
+  anode,segments
+
+let clock_top_test =
+  let _clock = "clock" in
+  let _reset = "reset" in
+  let _segments = "segments" in
+  let _anode = "anode" in
+  let clock = { clock = 2000; wire = Signal.input _clock 1 } in
+  let reset = Signal.input _reset 1 in
+  let (anode,segments) = clock_top ~clock ~reset in
+  let circuit = Circuit.create_exn ~name:"clock_top" [ Signal.output _anode anode; Signal.output _segments segments ] in
+  let waves, sim = Hardcaml_waveterm.Waveform.create (Cyclesim.create circuit) in
+  let cycles n =
+    for _ = 0 to n do
+      Cyclesim.cycle sim
+    done
+  in
+  cycles 16;
+  let display_rules =
+    Hardcaml_waveterm.Display_rule.[ port_name_is_one_of [ _segments; _anode ] ~wave_format:Bit; default ]
+  in
+  Hardcaml_waveterm.Waveform.print ~display_rules ~display_height:20 ~display_width:80 ~wave_width:2 waves
+
 
 let scope = Scope.create ()
 let output_mode = Rtl.Output_mode.To_file "main.v"
