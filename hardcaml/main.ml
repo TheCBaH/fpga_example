@@ -253,12 +253,42 @@ let display_test =
   let display_rules =
     Hardcaml_waveterm.Display_rule.[ port_name_is_one_of [ _segments; _anode ] ~wave_format:Bit; default ]
   in
-  Hardcaml_waveterm.Waveform.print ~display_rules ~display_height:20 ~display_width:80 ~wave_width:4 waves
+  Hardcaml_waveterm.Waveform.print ~display_rules ~display_height:10 ~display_width:80 ~wave_width:4 waves
+
+let multi_counter ?base ?bits ~digits ~reset ~increment ~clock () =
+  let rec make counters increment left =
+    if left == 0 then
+      List.rev counters
+    else
+      let (count,cary) = counter_with_carry ?base ?bits ~reset ~increment ~clock () in
+      make (count::counters) cary (left - 1) in
+    make [] increment digits
+let multi_counter_test =
+  let _clock = "clock" in
+  let _reset = "reset" in
+  let reset = Signal.input _reset 1 in
+  let clock = Signal.input _clock 1 in
+  let digits = multi_counter ~base:3 ~bits:4 ~increment:Signal.vdd ~clock ~reset ~digits:2 () in
+  let circuit = List.mapi (fun n digit -> Signal.output (Printf.sprintf "digit_%u" n) digit) digits |>
+    Circuit.create_exn ~name:"multi_counter"  in
+  let waves, sim = Hardcaml_waveterm.Waveform.create (Cyclesim.create circuit) in
+  let cycles n =
+    for _ = 0 to n do
+      Cyclesim.cycle sim
+    done
+  in
+  cycles 16;
+  Cyclesim.in_port sim _reset := Bits.vdd;
+  cycles 2;
+  Cyclesim.in_port sim _reset := Bits.gnd;
+  cycles 8;
+  Hardcaml_waveterm.Waveform.print ~display_height:12 ~display_width:80 ~wave_width:0 waves
 
 let clock_top ~clock ~reset =
   let open Signal in
   let digits = List.init 4 (fun _ -> { data = wire 4; enable = vdd; dot = gnd }) in
   let refresh = clock_gen ~clock ~reset ~target:1000 in
+  (* let tick = clock_gen ~clock ~reset ~target:500 in *)
   let anode, segments = display ~clock:clock.wire ~digits ~reset ~next:refresh in
   List.iteri (fun n d -> d.data <== of_int ~width:4 n) digits;
   (anode, segments)
@@ -282,7 +312,7 @@ let clock_top_test =
   let display_rules =
     Hardcaml_waveterm.Display_rule.[ port_name_is_one_of [ _segments; _anode ] ~wave_format:Bit; default ]
   in
-  Hardcaml_waveterm.Waveform.print ~display_rules ~display_height:20 ~display_width:80 ~wave_width:2 waves
+  Hardcaml_waveterm.Waveform.print ~display_rules ~display_height:12 ~display_width:80 ~wave_width:2 waves
 
 let scope = Scope.create ()
 let output_mode = Rtl.Output_mode.To_file "main.v"
