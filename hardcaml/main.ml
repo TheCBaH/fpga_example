@@ -109,9 +109,9 @@ let counter_with_carry_test_2 =
   set _increment;
   cycles 2;
   set _reset;
-  cycles 4;
-  clear _reset;
   cycles 2;
+  clear _reset;
+  cycles 4;
   Hardcaml_waveterm.Waveform.print ~display_height:16 ~display_width:100 ~wave_width:0 waves
 
 type clock = { clock : int; wire : Signal.t }
