@@ -29,8 +29,9 @@ let counter ~clock ~trigger ~minimum ~maximum =
     ctr_next <== mux2 (ctr ==:. range - 1) (zero (Signal.width ctr_next)) (ctr +:. 1);
     Signal.uresize ctr width +:. minimum
 
-let counter_with_carry ?(base = 10) ?(bits = 4) ~reset ~increment ~clock () =
+let counter_with_carry ?(base = 10) ?bits ~reset ~increment ~clock () =
   let base_bits = Base.Int.ceil_log2 base in
+  let bits = Option.value ~default:base_bits bits in
   assert (bits >= base_bits);
   let spec = Reg_spec.create ~clock () in
   let open Signal in
@@ -257,50 +258,56 @@ let display_test =
 
 let multi_counter ?base ?bits ~digits ~reset ~increment ~clock () =
   let rec make counters increment left =
-    if left == 0 then
-      List.rev counters
+    if left == 0 then List.rev counters
     else
-      let (count,cary) = counter_with_carry ?base ?bits ~reset ~increment ~clock () in
-      make (count::counters) cary (left - 1) in
-    make [] increment digits
+      let count, cary = counter_with_carry ?base ?bits ~reset ~increment ~clock () in
+      make (count :: counters) cary (left - 1)
+  in
+  make [] increment digits
+
 let multi_counter_test =
   let _clock = "clock" in
-  let _reset = "reset" in
+  let _reset = "[reset]" in
   let reset = Signal.input _reset 1 in
   let clock = Signal.input _clock 1 in
-  let digits = multi_counter ~base:3 ~bits:4 ~increment:Signal.vdd ~clock ~reset ~digits:2 () in
-  let circuit = List.mapi (fun n digit -> Signal.output (Printf.sprintf "digit_%u" n) digit) digits |>
-    Circuit.create_exn ~name:"multi_counter"  in
+  let digits = multi_counter ~base:4 ~increment:Signal.vdd ~clock ~reset ~digits:2 () in
+  let circuit =
+    List.mapi (fun n -> Printf.sprintf "digit_%u" n |> Signal.output) digits
+    |> Circuit.create_exn ~name:"multi_counter"
+  in
   let waves, sim = Hardcaml_waveterm.Waveform.create (Cyclesim.create circuit) in
   let cycles n =
     for _ = 0 to n do
       Cyclesim.cycle sim
     done
   in
-  cycles 16;
+  cycles 12;
   Cyclesim.in_port sim _reset := Bits.vdd;
   cycles 2;
   Cyclesim.in_port sim _reset := Bits.gnd;
-  cycles 8;
+  cycles 12;
   Hardcaml_waveterm.Waveform.print ~display_height:12 ~display_width:80 ~wave_width:0 waves
 
-let clock_top ~clock ~reset =
+let clock_top ~clock ~reset ~refresh ~tick =
   let open Signal in
-  let digits = List.init 4 (fun _ -> { data = wire 4; enable = vdd; dot = gnd }) in
-  let refresh = clock_gen ~clock ~reset ~target:1000 in
-  (* let tick = clock_gen ~clock ~reset ~target:500 in *)
+  let tick = clock_gen ~clock ~reset ~target:tick in
+  let digits = multi_counter ~increment:tick ~clock:clock.wire ~reset ~digits:4 () in
+  let digits = List.mapi (fun i d ->
+      let dot = if i = 1 then vdd else gnd in
+     { data = d; enable = vdd; dot }
+     ) digits in
+  let refresh = clock_gen ~clock ~reset ~target:refresh in
   let anode, segments = display ~clock:clock.wire ~digits ~reset ~next:refresh in
-  List.iteri (fun n d -> d.data <== of_int ~width:4 n) digits;
   (anode, segments)
 
 let clock_top_test =
   let _clock = "clock" in
-  let _reset = "reset" in
+  let _reset = "[reset]" in
   let _segments = "segments" in
   let _anode = "anode" in
   let clock = { clock = 2000; wire = Signal.input _clock 1 } in
   let reset = Signal.input _reset 1 in
-  let anode, segments = clock_top ~clock ~reset in
+  let anode, segments = clock_top ~clock ~reset ~refresh:1000 ~tick:500 in
   let circuit = Circuit.create_exn ~name:"clock_top" [ Signal.output _anode anode; Signal.output _segments segments ] in
   let waves, sim = Hardcaml_waveterm.Waveform.create (Cyclesim.create circuit) in
   let cycles n =
