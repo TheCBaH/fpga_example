@@ -272,8 +272,7 @@ let multi_counter_test =
   let clock = Signal.input _clock 1 in
   let digits = multi_counter ~base:4 ~increment:Signal.vdd ~clock ~reset ~digits:2 () in
   let circuit =
-    List.mapi (fun n -> Printf.sprintf "digit_%u" n |> Signal.output) digits
-    |> Circuit.create_exn ~name:"multi_counter"
+    List.mapi (fun n -> Printf.sprintf "digit_%u" n |> Signal.output) digits |> Circuit.create_exn ~name:"multi_counter"
   in
   let waves, sim = Hardcaml_waveterm.Waveform.create (Cyclesim.create circuit) in
   let cycles n =
@@ -292,10 +291,13 @@ let clock_top ~clock ~reset ~refresh ~tick =
   let open Signal in
   let tick = clock_gen ~clock ~reset ~target:tick in
   let digits = multi_counter ~increment:tick ~clock:clock.wire ~reset ~digits:4 () in
-  let digits = List.mapi (fun i d ->
-      let dot = if i = 1 then vdd else gnd in
-     { data = d; enable = vdd; dot }
-     ) digits in
+  let digits =
+    List.mapi
+      (fun i d ->
+        let dot = if i = 1 then vdd else gnd in
+        { data = d; enable = vdd; dot })
+      digits
+  in
   let refresh = clock_gen ~clock ~reset ~target:refresh in
   let anode, segments = display ~clock:clock.wire ~digits ~reset ~next:refresh in
   (anode, segments)
