@@ -1,10 +1,10 @@
 
 module top (
-    input wire logic clk,
-    btnc,
-    sw,
-    output logic [3:0] anode,
-    output logic [7:0] segment
+    input clk,
+    input btnc,
+    input sw,
+    output [3:0] anode,
+    output [7:0] segment
 );
 
   clock TOP (

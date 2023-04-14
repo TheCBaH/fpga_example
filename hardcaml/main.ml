@@ -45,7 +45,7 @@ let counter_with_carry ?(base = 10) ?bits ~reset ~increment ~clock () =
 let counter_with_carry_test_1 =
   let _clock = "clock" in
   let _increment = "increment" in
-  let _reset = "[reset]" in
+  let _reset = "_reset" in
   let clock = Signal.input _clock 1 in
   let increment = Signal.input _increment 1 in
   let reset = Signal.input _reset 1 in
@@ -74,12 +74,14 @@ let counter_with_carry_test_1 =
   cycles 4;
   Cyclesim.in_port sim _reset := Bits.gnd;
   cycles 7;
-  Hardcaml_waveterm.Waveform.print ~display_height:14 ~display_width:100 ~wave_width:0 waves
+  Hardcaml_waveterm.Waveform.print ~display_height:14 ~display_width:100 ~wave_width:0 waves;
+  let output_mode = Rtl.Output_mode.To_file "counter.v" in
+  Rtl.output ~output_mode Verilog circuit
 
 let counter_with_carry_test_2 =
   let _clock = "clock" in
   let _increment = "increment" in
-  let _reset = "[reset]" in
+  let _reset = "_reset" in
   let clock = Signal.input _clock 1 in
   let increment = Signal.input _increment 1 in
   let reset = Signal.input _reset 1 in
@@ -130,7 +132,7 @@ let clock_gen ~target ~reset ~clock =
 
 let clock_gen_test =
   let _clock = "clock" in
-  let _reset = "[reset]" in
+  let _reset = "_reset" in
   let clock = { clock = 10; wire = Signal.input _clock 1 } in
   let reset = Signal.input _reset 1 in
   let pulse = clock_gen ~clock ~reset ~target:2 in
@@ -205,15 +207,15 @@ let display ~clock ~digits ~next ~reset =
   let anode =
     List.mapi
       (fun n d ->
-        let enable = ~:(d.enable &: (digit ==:. n)) in
+        let enable = ~:(~:reset &: d.enable &: (digit ==:. n)) in
         wireof enable)
       digits
-    |> concat_msb
+    |> concat_lsb
   in
   let data = mux digit (List.map (fun d -> d.data) digits) in
   let segment = segment_encode ~digit:data in
   let dot = mux digit (List.map (fun d -> d.dot) digits) in
-  let display = segment @: ~:dot in
+  let display = ~:dot @: segment in
   let digit_next = mux2 next (mux2 (digit ==:. digits_count - 1) (width digit |> zero) (digit +:. 1)) digit in
   digit <== reg spec digit_next;
   (anode, display)
@@ -267,7 +269,7 @@ let multi_counter ?base ?bits ~digits ~reset ~increment ~clock () =
 
 let multi_counter_test =
   let _clock = "clock" in
-  let _reset = "[reset]" in
+  let _reset = "_reset" in
   let reset = Signal.input _reset 1 in
   let clock = Signal.input _clock 1 in
   let digits = multi_counter ~base:4 ~increment:Signal.vdd ~clock ~reset ~digits:2 () in
@@ -294,7 +296,7 @@ let clock_top ~clock ~reset ~refresh ~tick =
   let digits =
     List.mapi
       (fun i d ->
-        let dot = if i = 1 then vdd else gnd in
+        let dot = if i = 2 then vdd else gnd in
         { data = d; enable = vdd; dot })
       digits
   in
@@ -304,7 +306,7 @@ let clock_top ~clock ~reset ~refresh ~tick =
 
 let clock_top_test =
   let _clock = "clock" in
-  let _reset = "[reset]" in
+  let _reset = "_reset" in
   let _segment = "segment" in
   let _anode = "anode" in
   let clock = { clock = 2000; wire = Signal.input _clock 1 } in
