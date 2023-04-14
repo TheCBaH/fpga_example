@@ -343,6 +343,40 @@ let clock_top_test =
   in
   Hardcaml_waveterm.Waveform.print ~display_rules ~display_height:12 ~display_width:80 ~wave_width:2 waves
 
+module Reset = struct
+  module I = struct
+    type 'a t = { clock : 'a; [@bits 1] activate : 'a [@bits 1] } [@@deriving sexp_of, hardcaml]
+  end
+
+  module O = struct
+    type 'a t = { reset : 'a [@bits 1] } [@@deriving sexp_of, hardcaml]
+  end
+
+  let create (_scope : Scope.t) (input : Signal.t I.t) =
+    { O.reset = pulse ~reset:input.activate ~clock:input.clock ~length:2 }
+
+  let hierarchical scope input =
+    let module H = Hierarchy.In_scope (I) (O) in
+    H.hierarchical ~scope ~name:"reset" create input
+end
+
+module Clock = struct
+  module I = struct
+    type 'a t = { clock : 'a; [@bits 1] reset : 'a [@bits 1] } [@@deriving sexp_of, hardcaml]
+  end
+
+  module O = struct
+    type 'a t = { anode: 'a; [@bits 4] segment: 'a; [@bits 8]  } [@@deriving sexp_of, hardcaml]
+  end
+  let create (_scope : Scope.t) (input : Signal.t I.t) =
+    let clock = { clock = 100_000_000; wire = input.clock } in
+    let anode, segment = clock_top ~clock ~reset:input.reset ~refresh:1000 ~tick:100 in
+    { O.anode ; segment}
+end
+
+module ClockCircuit = Circuit.With_interface (Clock.I) (Clock.O)
+module ResetCircuit = Circuit.With_interface (Reset.I) (Reset.O)
+
 let scope = Scope.create ()
 let output_mode = Rtl.Output_mode.To_file "clock.v"
 
