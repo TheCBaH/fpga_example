@@ -324,25 +324,16 @@ let clock_top_test =
   Hardcaml_waveterm.Waveform.print ~display_rules ~display_height:12 ~display_width:80 ~wave_width:2 waves
 
 let scope = Scope.create ()
-let output_mode = Rtl.Output_mode.To_file "main.v"
+let output_mode = Rtl.Output_mode.To_file "clock.v"
 
 let circuit =
-  let _digit_0 = "digit_0" in
-  let _digit_1 = "digit_1" in
-  let _dot = "dot" in
-  let _enable = "enable" in
   let _clock = "clock" in
   let _reset = "reset" in
   let _segments = "segments" in
   let _anode = "anode" in
-  let digit_0 = Signal.input _digit_0 4 in
-  let digit_1 = Signal.input _digit_1 4 in
-  let clock = Signal.input _clock 1 in
-  let enable = Signal.input _enable 1 in
-  let dot = Signal.input _dot 1 in
-  let digits = [ { data = digit_0; enable; dot }; { data = digit_1; enable; dot } ] in
   let reset = Signal.input _reset 1 in
-  let anode, segments = display ~clock ~digits ~reset ~next:enable in
+  let clock = { clock = 100_000_000; wire = Signal.input _clock 1 } in
+  let anode, segments = clock_top ~clock ~reset ~refresh:1000 ~tick:100 in
   Circuit.create_exn ~name:"test" [ Signal.output "anode" anode; Signal.output "segments" segments ]
 
 let () = Rtl.output ~output_mode ~database:(Scope.circuit_database scope) Verilog circuit
