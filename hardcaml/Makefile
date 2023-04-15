@@ -19,7 +19,7 @@ utop:
 OFL_BOARD.basys3=basys3
 TARGET=basys3
 
-bit: main
+design: main
 	rm -rf build
 	set -eux;. ${F4PGA_INSTALL_DIR}/${FPGA_FAM}/conda/etc/profile.d/conda.sh;\
 	 conda activate ${FPGA_FAM};${MAKE} -f ../f4pga-examples/common/common.mk\
