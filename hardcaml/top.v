@@ -9,8 +9,8 @@ module top (
   reg  powered = 1'b0;
   assign reset_ctrl = ~powered | btnc;
 
-  always @(negedge clk) begin
-    powered <= 1;
+  always @(posedge clk) begin
+      powered <= 1'b1;
   end
 
   reset RESET (
