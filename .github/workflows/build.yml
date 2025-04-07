@@ -73,7 +73,7 @@ jobs:
         file=$(${{ env.EXEC }} make --quiet --no-print-directory ${{ matrix.example }}.example_bit TARGET=${{ matrix.target }})
         cp $file ${{ matrix.example }}-${{ matrix.target }}.bit
     - name: Upload artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.example }}-${{ matrix.target }}
         if-no-files-found: error
@@ -94,6 +94,6 @@ jobs:
         version=${version##*/}
         zip f4pga-examples-$version.zip *.bit
     - name: upload release
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       with:
         files: f4pga-examples-*.zip
