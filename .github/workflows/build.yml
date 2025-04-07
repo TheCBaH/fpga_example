@@ -85,7 +85,7 @@ jobs:
     permissions:
       contents: write
     steps:
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
     - name: Package
       run: |
         ls -alR
