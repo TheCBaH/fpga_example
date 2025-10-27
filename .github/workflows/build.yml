@@ -73,7 +73,7 @@ jobs:
         file=$(${{ env.EXEC }} make --quiet --no-print-directory ${{ matrix.example }}.example_bit TARGET=${{ matrix.target }})
         cp $file ${{ matrix.example }}-${{ matrix.target }}.bit
     - name: Upload artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: ${{ matrix.example }}-${{ matrix.target }}
         if-no-files-found: error
